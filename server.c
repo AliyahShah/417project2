@@ -24,15 +24,11 @@ int servSock; /* Socket descriptor for server */
     int cookie;
     
 int main (int argc, char **argv){
-    if (argc != 2) /* Test for correct number of arguments */ {
-        fprintf(stderr, "Wrong number of args %d \n", argc);
-        fflush(stderr);
-		exit(1);
-    } 
-
-    fflush(stdout);
-    fflush(stderr);
-    echoServPort = atoi(argv[1]); /* First arg: local port */ 
+    if (argc == 2) /* Test for correct number of arguments */ {
+         echoServPort = atoi(argv[1]); /* First arg: local port */ 
+    } else {
+        echoServPort = SERVER_PORT;
+    }
     
     if ((servSock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
         fprintf(stderr, "error making socket\n");
