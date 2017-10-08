@@ -65,13 +65,13 @@ int main (int argc, char **argv){
         
         /* Wait for a client to connect */
         if ((clntSock = accept(servSock, (struct sockaddr *) &echoClntAddr, &clntLen)) < 0){
-            fprintf(stderr, "**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
+            printf( "**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
             fflush(stdout);   
         }
             
         /* Receive HELLO message from client */
         if ((recvMsgSize = recv(clntSock, echoBuffer, RCVBUFSIZE, 0)) < 0){
-            fprintf(stderr, "**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
+            printf("**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
             fflush(stdout);
         }
         
@@ -80,14 +80,13 @@ int main (int argc, char **argv){
             /*get hello msg. return -1 if error*/
             if(rcvHello() == 0){
                 /* send STATUS message back to client */
-                char sendBack[144] = "";
+                char * sendBack = calloc(2000, 0);
                 
                 cookie = makeCookie(inet_ntoa(echoClntAddr.sin_addr));
-                sprintf(sendBack,"%s STATUS %d %s:%s\n", MAGIC_STRING,cookie,inet_ntoa(echoClntAddr.sin_addr),argv[1]);
+                sprintf(sendBack,"%s STATUS %d %s:%d\n", MAGIC_STRING,cookie,inet_ntoa(echoClntAddr.sin_addr),echoServPort);
                 
-                if (send(clntSock, sendBack, recvMsgSize, 0) != recvMsgSize){/*send first status message back*/
-                    fprintf(stderr, "**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
-                    fflush(stderr);   
+                if (send(clntSock, sendBack, strlen(sendBack), 0) != strlen(sendBack)){/*send first status message back*/
+                    printf("**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
                     fflush(stdout);
                 }
             } 
@@ -106,8 +105,7 @@ int main (int argc, char **argv){
                     strcat(sendBack, MAGIC_STRING);
                     strcat(sendBack, " SERVER_BYE");
                     if (send(clntSock, sendBack, recvMsgSize, 0) != recvMsgSize){
-                        fprintf(stderr, "**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
-                        fflush(stderr);  
+                        printf("**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
                         fflush(stdout);
                     }else{
                         //print cookie id name from ip:port
@@ -136,13 +134,27 @@ int is_empty(const char *s) {
   return 1;
 }
 
-int makeCookie(int ip){
-    // char *pch2;
-    // pch2 = strtok (*ip,".");
-    // printf("\npart 1 ip: %s",pch2);
-    // pch2 = strtok (NULL,".");
-    // printf("\npart 2 ip: %s",pch2);
-    return 553;
+int makeCookie(char * ip){/*TODO*/
+    char * cookiestr = strtok(ip, " .,");
+    int count = 0;
+    int ip1 = 0;
+    int ip2 = 0;
+    int ip3 = 0;
+    int ip4 = 0;
+    while(count <= 3){
+        if(count == 0){
+            ip1 = atoi(cookiestr);
+        }else if(count == 1){
+            ip2 = atoi(cookiestr);
+        }else if(count == 2){
+            ip3 = atoi(cookiestr);
+        }else{
+            ip4 = atoi(cookiestr);
+        }
+        cookiestr = strtok(NULL, " ,.");
+        count++;
+    }
+    return (((ip1 + ip2+ ip3 + ip4)*13)%1111);
     
 }
 
@@ -153,14 +165,12 @@ int rcvHello(){
     int count = 0;
     while(count <= 3){/*counting the number of arguments and parsing the incoming msg*/
     	if(count == 0 && strcmp(MAGIC_STRING,helloMsg) != 0){/*if incorrect magin string - error*/
-    	   fprintf(stderr, "**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
-    	   fflush(stderr);  
-    	    fflush(stdout);
+    	   printf("**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
+    	   fflush(stdout);
     	   close(clntSock);
     	   return -1;
     	} else if(count == 1 && strcmp("HELLO",helloMsg) != 0){/*if not a hello msg = error*/
-    	   fprintf(stderr, "**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
-    	   fflush(stderr);  
+    	   printf("**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
     	    fflush(stdout);
     	   close(clntSock);
     	   return -1;
@@ -178,8 +188,7 @@ int rcvHello(){
     }
     
     if(helloMsg != NULL && is_empty(helloMsg) != 0){ /*Wrong number of arguments sent in hellomsg*/
-        fprintf(stderr, "**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
-        fflush(stderr);
+        printf("**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
          fflush(stdout);
         close(clntSock);
         return -1;
@@ -195,20 +204,17 @@ int rcvBye(){
     int count = 0;
     while(count <= 3){/*counting the number of arguments and parsing the incoming msg*/
     	if(count == 0 && strcmp(MAGIC_STRING,helloMsg) != 0){/*if incorrect magic string - error*/
-    	   fprintf(stderr, "**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
-    	   fflush(stderr);  
+    	   printf("**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
     	   fflush(stdout);
     	   close(clntSock);
     	   return -1;
     	} else if(count == 1 && strcmp("CLIENT_BYE",helloMsg) != 0){/*if not a client_bye msg = error*/
-    	   fprintf(stderr, "**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
-    	   fflush(stderr);  
+    	   printf("**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
     	    fflush(stdout);
     	   close(clntSock);
     	   return -1;
     	} else if(count == 2 && cookie != atoi(helloMsg)) { /*if incorrect cookie*/
-    	   fprintf(stderr, "**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
-    	   fflush(stderr); 
+    	   printf("**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
     	    fflush(stdout);
     	   close(clntSock);
     	   return -1;
@@ -219,8 +225,7 @@ int rcvBye(){
     }
                 
     if(helloMsg != NULL && is_empty(helloMsg) != 0){ /*Wrong number of arguments*/
-        fprintf(stderr, "**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
-        fflush(stderr);
+        printf("**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
          fflush(stdout);
         close(servSock);
         close(clntSock);
