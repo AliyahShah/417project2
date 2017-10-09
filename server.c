@@ -41,12 +41,16 @@ int main (int argc, char **argv){
     echoServAddr.sin_addr.s_addr = htonl(INADDR_ANY); /* Any incoming interface */
     echoServAddr.sin_port = htons(echoServPort); /* Local port */ 
     
+    int reuse;
+    if (setsockopt(servSock, SOL_SOCKET, SO_REUSEADDR, (char *)&reuse, sizeof(int)) == -1){
+     printf("Reuse port Error\n");
+    }
+
     /* Bind to the local address */
     if (bind(servSock, (struct sockaddr *)&echoServAddr, sizeof(echoServAddr)) < 0){ 
-        fprintf(stderr, "error binding socket\n");
-        close(servSock);
-        fflush(stderr); 
+        printf("error binding socket\n");
         fflush(stdout);
+        close(servSock);
         close(clntSock);
         exit(1);
     }
@@ -114,9 +118,6 @@ int main (int argc, char **argv){
         }
         close(clntSock); /* Close client socket */ 
     } 
-    
-    close(clntSock);
-    close(servSock);
     return 0;
 }
 
