@@ -196,35 +196,34 @@ int rcvHello(){
 
 int rcvBye(){
     //Validate message recieved by echoBuffer
-    char * helloMsg = strtok (echoBuffer2, " .,");
+    char * byeMsg = strtok (echoBuffer2, " .,");
                 
     int count = 0;
-    while(count <= 3){/*counting the number of arguments and parsing the incoming msg*/
-    	if(count == 0 && strcmp(MAGIC_STRING,helloMsg) != 0){/*if incorrect magic string - error*/
+    while(count < 3){/*counting the number of arguments and parsing the incoming msg*/
+    	if(count == 0 && strcmp(MAGIC_STRING,byeMsg) != 0){/*if incorrect magic string - error*/
     	   printf("**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
     	   fflush(stdout);
     	   close(clntSock);
     	   return -1;
-    	} else if(count == 1 && strcmp("CLIENT_BYE",helloMsg) != 0){/*if not a client_bye msg = error*/
+    	} else if(count == 1 && strcmp("CLIENT_BYE",byeMsg) != 0){/*if not a client_bye msg = error*/
     	   printf("**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
     	    fflush(stdout);
     	   close(clntSock);
     	   return -1;
-    	} else if(count == 2 && cookie != atoi(helloMsg)) { /*if incorrect cookie*/
+    	} else if(count == 2 && cookie != atoi(byeMsg)) { /*if incorrect cookie*/
     	   printf("**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
     	    fflush(stdout);
     	   close(clntSock);
     	   return -1;
     	}
             
-    	helloMsg = strtok(NULL, " ,.\r\r\n");
+    	byeMsg = strtok(NULL, " ,.\r\r\n");
     	count++;
     }
                 
-    if(helloMsg != NULL && is_empty(helloMsg) != 0){ /*Wrong number of arguments*/
+    if(byeMsg != NULL && is_empty(byeMsg) != 0){ /*Wrong number of arguments*/
         printf("**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
          fflush(stdout);
-        close(servSock);
         close(clntSock);
         return -1;
     }
