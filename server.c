@@ -158,6 +158,12 @@ int makeCookie(char * ip){/*TODO*/
 int rcvHello(){
     //Validate message recieved by echoBuffer
     char * helloMsg = strtok (echoBuffer, " ");
+    if(strlen(echoBuffer) > MAX_STR_SIZE){/*make sure message is less than max size*/
+        printf("**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
+    	fflush(stdout);
+    	close(clntSock);
+    	return -1;
+    }
     
     int count = 0;
     while(count <= 3){/*counting the number of arguments and parsing the incoming msg*/
@@ -178,6 +184,11 @@ int rcvHello(){
     	} else if(count == 3){
     	    //get name last field
     	    name = helloMsg;
+    	}else if (helloMsg == NULL){/*Too few arguments?*/
+    	    printf("**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
+    	    fflush(stdout);
+    	   close(clntSock);
+    	   return -1;
     	}
         
     	helloMsg = strtok(NULL, " ,.\r\r\n");
@@ -197,21 +208,34 @@ int rcvHello(){
 int rcvBye(){
     //Validate message recieved by echoBuffer
     char * byeMsg = strtok (echoBuffer2, " .,");
+    if(strlen(echoBuffer2) > MAX_STR_SIZE){/*make sure message is less than max size*/
+        printf("**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
+    	fflush(stdout);
+    	close(clntSock);
+    	return -1;
+    }
+    char str[12];
+    sprintf(str, "%d", cookie);
                 
     int count = 0;
     while(count < 3){/*counting the number of arguments and parsing the incoming msg*/
-    	if(count == 0 && strcmp(MAGIC_STRING,byeMsg) != 0){/*if incorrect magic string - error*/
+    	if(count == 0 && byeMsg && strcmp(MAGIC_STRING,byeMsg) != 0){/*if incorrect magic string - error*/
     	   printf("**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
     	   fflush(stdout);
     	   close(clntSock);
     	   return -1;
-    	} else if(count == 1 && strcmp("CLIENT_BYE",byeMsg) != 0){/*if not a client_bye msg = error*/
+    	} else if(count == 1 && byeMsg && strcmp("CLIENT_BYE",byeMsg) != 0){/*if not a client_bye msg = error*/
     	   printf("**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
     	    fflush(stdout);
     	   close(clntSock);
     	   return -1;
-    	} else if(count == 2 && cookie != atoi(byeMsg)) { /*if incorrect cookie*/
+    	} else if(count == 2 && byeMsg && cookie != atoi(byeMsg) && strcmp(str, byeMsg) != 0) { /*if incorrect cookie*/
     	   printf("**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
+    	    fflush(stdout);
+    	   close(clntSock);
+    	   return -1;
+    	} else if (byeMsg == NULL){/*Too few arguments?*/
+    	    printf("**Error** from %s:%d", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
     	    fflush(stdout);
     	   close(clntSock);
     	   return -1;
