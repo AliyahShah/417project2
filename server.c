@@ -250,7 +250,7 @@ int rcvBye(){
     	count++;
     }
                 
-    if(byeMsg != NULL && is_empty(byeMsg) != 0){ /*Wrong number of arguments*/
+    if(byeMsg != NULL && is_empty(byeMsg) == 0){ /*Wrong number of arguments*/
         printf("**Error** from %s:%d\n", inet_ntoa(echoClntAddr.sin_addr),echoServPort);
          fflush(stdout);
         close(clntSock);
